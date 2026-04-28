@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Record du monde du marathon — L'Équipe</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E8001C; --bg:#F5F2EE; --card:#FFFFFF; --line:#E0DCD7;
+    --dark:#111111; --mid:#555555; --light:#888888; --gold:#C8920A; --goldb:#F0A500;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{overflow-x:hidden;}
+  body{background:var(--bg);color:var(--dark);font-family:'Barlow',sans-serif;}
+
+  .hdr{background:var(--red);padding:13px 18px 11px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .hdr-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:21px;color:#fff;text-transform:uppercase;letter-spacing:-0.5px;}
+  .hdr-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.82);text-transform:uppercase;}
+
+  .hero{background:var(--dark);padding:22px 18px 20px;border-bottom:3px solid var(--red);position:relative;overflow:hidden;}
+  .hero::after{content:'42,195';position:absolute;right:-6px;bottom:-14px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:72px;color:rgba(255,255,255,0.04);pointer-events:none;letter-spacing:-3px;line-height:1;}
+  .hero-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:7px;}
+  .hero-title{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;line-height:0.93;text-transform:uppercase;color:#fff;letter-spacing:-1px;margin-bottom:16px;}
+  .hero-title em{color:var(--red);font-style:normal;}
+  .hero-record{display:flex;align-items:flex-end;gap:14px;border-left:4px solid var(--gold);padding:10px 14px;background:rgba(200,146,10,0.1);margin-bottom:10px;}
+  .hero-time{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:44px;color:var(--goldb);letter-spacing:-2px;line-height:1;}
+  .hero-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:rgba(240,165,0,0.9);line-height:1;}
+  .hero-sub{font-size:11px;color:rgba(240,165,0,0.6);margin-top:3px;}
+  .hero-prev{font-size:11px;color:#777;}
+  .hero-prev strong{color:#bbb;}
+
+  .sec{padding:22px 18px;border-bottom:1px solid var(--line);background:var(--bg);}
+  .sec.white{background:var(--card);}
+  .sec-ttl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2.5px;color:var(--red);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .sec-ttl::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  .chart-wrap{position:relative;touch-action:pan-y;}
+  canvas#cvs{width:100%!important;display:block;cursor:pointer;}
+  #tooltip{position:absolute;background:var(--dark);color:#fff;padding:10px 13px;font-size:12px;line-height:1.5;pointer-events:none;opacity:0;transition:opacity 0.15s;border-left:3px solid var(--red);min-width:140px;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:50;}
+  #tooltip.gold{border-left-color:var(--gold);}
+  #tooltip strong{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;display:block;line-height:1.1;}
+  .tt-sub{color:#aaa;font-size:10px;margin-top:1px;}
+  .tt-gain{color:var(--red);font-size:11px;font-weight:600;margin-top:3px;}
+  #tooltip.gold .tt-gain{color:var(--goldb);}
+  .chart-hint{font-size:10px;color:var(--light);text-align:center;margin-top:8px;font-style:italic;}
+  .chart-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
+  .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mid);}
+  .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+  .msl{display:flex;flex-direction:column;}
+  .msg{width:2px;min-height:10px;background:var(--line);margin-left:44px;}
+  .ms{display:flex;align-items:center;opacity:0;transform:translateX(-14px);transition:opacity 0.35s,transform 0.35s;}
+  .ms.vis{opacity:1;transform:none;}
+  .ms-yr{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;color:var(--light);width:40px;flex-shrink:0;text-align:right;padding-right:8px;}
+  .ms-dot{width:9px;height:9px;border-radius:50%;background:var(--line);border:2px solid #ccc;flex-shrink:0;margin:0 10px;}
+  .ms.key .ms-dot{background:var(--red);border-color:var(--red);width:12px;height:12px;box-shadow:0 0 8px rgba(232,0,28,0.35);}
+  .ms.sawe .ms-dot{background:var(--gold);border-color:var(--gold);width:16px;height:16px;animation:gpulse 1.6s ease-in-out infinite;}
+  @keyframes gpulse{0%,100%{box-shadow:0 0 12px rgba(200,146,10,0.5);}50%{box-shadow:0 0 24px rgba(200,146,10,0.85);}}
+  .ms-body{flex:1;padding:9px 12px;background:var(--card);border:1px solid var(--line);border-left:3px solid transparent;}
+  .ms.key .ms-body{border-left-color:var(--red);}
+  .ms.sawe .ms-body{border-left-color:var(--gold);background:rgba(200,146,10,0.05);}
+  .ms-t{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--dark);letter-spacing:-0.5px;line-height:1;}
+  .ms.sawe .ms-t{color:var(--gold);font-size:24px;}
+  .ms-ath{font-size:11px;color:var(--mid);margin-top:2px;font-weight:600;}
+  .ms.sawe .ms-ath{color:var(--gold);}
+  .ms-gn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--red);margin-top:2px;}
+  .ms.sawe .ms-gn{color:var(--gold);font-size:13px;}
+  .ms-pl{font-size:10px;color:var(--light);margin-top:2px;}
+
+  .pace-table{width:100%;border-collapse:collapse;}
+  .pace-table th{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--light);padding:8px 8px 6px;border-bottom:2px solid var(--line);text-align:left;}
+  .pace-table th:not(:first-child){text-align:center;}
+  .pace-table td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .pace-table td:not(:first-child){text-align:center;}
+  .pt-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--mid);text-transform:uppercase;letter-spacing:0.5px;}
+  .pt-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--dark);letter-spacing:-0.5px;line-height:1.1;}
+  .pt-val.gold{color:var(--gold);}
+  .pt-unit{font-size:10px;color:var(--light);margin-top:1px;}
+  .pt-col-head{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;color:var(--dark);}
+  .pt-col-head.curr{color:var(--gold);}
+  .pt-year{font-size:10px;color:var(--light);font-weight:500;}
+
+  .bars{display:flex;flex-direction:column;gap:11px;}
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--dark);width:52px;flex-shrink:0;}
+  .bar-trk{flex:1;height:27px;background:var(--line);overflow:hidden;}
+  .bar-fill{height:100%;background:var(--red);width:0%;display:flex;align-items:center;padding-left:9px;transition:width 1.3s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden;}
+  .bar-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.12));}
+  .bar-fill.gold{background:linear-gradient(90deg,#B8860B,var(--goldb));}
+  .bar-txt{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#fff;white-space:nowrap;position:relative;z-index:1;}
+  .bar-yr{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--light);font-weight:600;width:32px;text-align:right;flex-shrink:0;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .stat{background:var(--card);padding:13px;border:1px solid var(--line);border-top:3px solid var(--line);}
+  .stat.r{border-top-color:var(--red);}
+  .stat.g{border-top-color:var(--gold);}
+  .stat-v{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--dark);letter-spacing:-1px;line-height:1;}
+  .stat.g .stat-v{color:var(--gold);}
+  .stat-l{font-size:10px;color:var(--light);margin-top:4px;line-height:1.4;}
+
+  .footer{padding:14px 18px;background:var(--card);border-top:1px solid var(--line);}
+  .footer p{font-size:10px;color:var(--light);line-height:1.7;}
+  .footer strong{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:12px;color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">L'Équipe</div>
+  <div class="hdr-tag">Dataviz · 26 avril 2026</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">📍 Marathon de Londres · 26 avril 2026</div>
+  <div class="hero-title">Le mur<br>des <em>2 heures</em><br>est tombé</div>
+  <div class="hero-record">
+    <div class="hero-time">1:59:30</div>
+    <div>
+      <div class="hero-name">⚡ Sabastian Sawe · Kenya</div>
+      <div class="hero-sub">Marathon de Londres · 21,19 km/h</div>
+    </div>
+  </div>
+  <div class="hero-prev">Précédent : <strong>2:00:35</strong> — K. Kiptum, Chicago 2023 &nbsp;·&nbsp; Gain : <strong>−1'05"</strong></div>
+</div>
+
+<div class="sec white">
+  <div class="sec-ttl">118 ans de progression</div>
+  <div class="chart-wrap">
+    <canvas id="cvs" height="300"></canvas>
+    <div id="tooltip"></div>
+  </div>
+  <div class="chart-hint">Appuyez sur un point pour afficher le détail du record</div>
+  <div class="chart-legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Record clé</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div>Sawe 2026</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--line);border:1.5px dashed #E8001C"></div>Barrière 2h</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-ttl">Records marquants</div>
+  <div id="msl" class="msl"></div>
+</div>
+
+<div class="sec white">
+  <div class="sec-ttl">Vitesse &amp; allure au kilomètre</div>
+  <table class="pace-table">
+    <thead>
+      <tr>
+        <th>Indicateur</th>
+        <th><div class="pt-col-head">Hayes</div><div class="pt-year">Londres 1908</div></th>
+        <th><div class="pt-col-head">Kiptum</div><div class="pt-year">Chicago 2023</div></th>
+        <th><div class="pt-col-head curr">Sawe ⚡</div><div class="pt-year">Londres 2026</div></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="pt-label">Temps</div></td>
+        <td><div class="pt-val">2:55:18</div></td>
+        <td><div class="pt-val">2:00:35</div></td>
+        <td><div class="pt-val gold">1:59:30</div></td>
+      </tr>
+      <tr>
+        <td><div class="pt-label">Vitesse</div><div class="pt-unit">km/h</div></td>
+        <td><div class="pt-val">14,44</div></td>
+        <td><div class="pt-val">21,00</div></td>
+        <td><div class="pt-val gold">21,19</div></td>
+      </tr>
+      <tr>
+        <td><div class="pt-label">Allure</div><div class="pt-unit">min/km</div></td>
+        <td><div class="pt-val">4'09"</div></td>
+        <td><div class="pt-val">2'51"</div></td>
+        <td><div class="pt-val gold">2'50"</div></td>
+      </tr>
+      <tr>
+        <td><div class="pt-label">Allure</div><div class="pt-unit">min/mile</div></td>
+        <td><div class="pt-val">6'41"</div></td>
+        <td><div class="pt-val">4'35"</div></td>
+        <td><div class="pt-val gold">4'34"</div></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:10px;color:var(--light);margin-top:10px;line-height:1.6;">Hayes (1908) courait à <strong style="color:var(--dark)">4'09"/km</strong>. Sawe (2026) parcourt le même kilomètre en <strong style="color:var(--dark)">2'50"</strong> — soit <strong style="color:var(--red)">1'19" de moins</strong> par kilomètre, sur 42 km.</p>
+</div>
+
+<div class="sec">
+  <div class="sec-ttl">Barrières symboliques franchies</div>
+  <div class="bars" id="barsl"></div>
+</div>
+
+<div class="sec white">
+  <div class="sec-ttl">En chiffres</div>
+  <div class="stats">
+    <div class="stat g"><div class="stat-v">1:59:30</div><div class="stat-l">Record mondial · Sawe · Londres 2026</div></div>
+    <div class="stat r"><div class="stat-v">−55'48"</div><div class="stat-l">Gagné depuis le 1er record homologué (1908)</div></div>
+    <div class="stat"><div class="stat-v">41</div><div class="stat-l">Records du monde successifs depuis 1908</div></div>
+    <div class="stat"><div class="stat-v">118 ans</div><div class="stat-l">Pour franchir la barrière mythique des 2h</div></div>
+  </div>
+</div>
+
+<div class="footer">
+  <p><strong>L'Équipe</strong> — Source : World Athletics. 41 records homologués depuis le 24 juillet 1908. Dataviz publiée le 26 avril 2026. Tous droits réservés.</p>
+</div>
+
+<script>
+// ── postMessage resize ──
+function sendHeight(){
+  var h=document.body.scrollHeight;
+  try{window.parent.postMessage({type:'resize-dataviz',height:h},'*');}catch(e){}
+}
+if(window.ResizeObserver){new ResizeObserver(sendHeight).observe(document.body);}
+window.addEventListener('resize',sendHeight);
+
+// ── DATA ──
+var ALL=[
+  {y:1908,s:10518,t:"2:55:18",a:"Johnny Hayes",      nat:"USA",place:"Londres (JO)",  gain:null,       key:false},
+  {y:1909,s:10365,t:"2:52:45",a:"Robert Fowler",     nat:"USA",place:"Yonkers",        gain:"−2'33\"",  key:false},
+  {y:1909,s:10012,t:"2:46:52",a:"James Clark",       nat:"USA",place:"New York",        gain:"−5'53\"",  key:false},
+  {y:1909,s: 9964,t:"2:46:04",a:"Albert Raines",     nat:"USA",place:"New York",        gain:"−0'48\"",  key:false},
+  {y:1909,s: 9751,t:"2:42:31",a:"Henry Barrett",     nat:"GBR",place:"Londres",         gain:"−3'33\"",  key:false},
+  {y:1909,s: 9634,t:"2:40:34",a:"Thure Johansson",   nat:"SWE",place:"Stockholm",       gain:"−1'57\"",  key:false},
+  {y:1913,s: 9496,t:"2:38:16",a:"Harry Green",       nat:"GBR",place:"Londres",         gain:"−2'18\"",  key:false},
+  {y:1913,s: 9366,t:"2:36:06",a:"Alexis Ahlgren",    nat:"SWE",place:"Londres",         gain:"−2'10\"",  key:false},
+  {y:1920,s: 9155,t:"2:32:35",a:"H. Kolehmainen",    nat:"FIN",place:"Anvers (JO)",     gain:"−3'31\"",  key:true},
+  {y:1927,s: 9057,t:"2:30:57",a:"Harry Payne",       nat:"GBR",place:"Londres",         gain:"−1'38\"",  key:false},
+  {y:1935,s: 8804,t:"2:26:44",a:"Yasuo Ikenaka",     nat:"JPN",place:"Tokyo",           gain:"−4'13\"",  key:false},
+  {y:1935,s: 8802,t:"2:26:42",a:"Son Ki-jeong",      nat:"KOR",place:"Tokyo",           gain:"−0'02\"",  key:false},
+  {y:1947,s: 8739,t:"2:25:39",a:"Suh Yun-bok",       nat:"KOR",place:"Boston",          gain:"−1'03\"",  key:false},
+  {y:1952,s: 8443,t:"2:20:43",a:"Jim Peters",        nat:"GBR",place:"Londres",         gain:"−4'56\"",  key:true},
+  {y:1953,s: 8320,t:"2:18:40",a:"Jim Peters",        nat:"GBR",place:"Londres",         gain:"−2'03\"",  key:false},
+  {y:1953,s: 8314,t:"2:18:34",a:"Jim Peters",        nat:"GBR",place:"Turku",           gain:"−0'06\"",  key:false},
+  {y:1954,s: 8259,t:"2:17:39",a:"Jim Peters",        nat:"GBR",place:"Londres",         gain:"−0'55\"",  key:false},
+  {y:1958,s: 8117,t:"2:15:17",a:"Sergey Popov",      nat:"URS",place:"Stockholm",       gain:"−2'22\"",  key:false},
+  {y:1960,s: 8116,t:"2:15:16",a:"Abebe Bikila",      nat:"ETH",place:"Rome (JO)",       gain:"−0'01\"",  key:true},
+  {y:1963,s: 8115,t:"2:15:15",a:"T. Terasawa",       nat:"JPN",place:"Beppu",           gain:"−0'01\"",  key:false},
+  {y:1963,s: 8068,t:"2:14:28",a:"Leonard Edelen",    nat:"USA",place:"Londres",         gain:"−0'47\"",  key:false},
+  {y:1964,s: 8035,t:"2:13:55",a:"Basil Heatley",     nat:"GBR",place:"Londres",         gain:"−0'33\"",  key:false},
+  {y:1964,s: 7931,t:"2:12:11",a:"Abebe Bikila",      nat:"ETH",place:"Tokyo (JO)",      gain:"−1'44\"",  key:true},
+  {y:1965,s: 7920,t:"2:12:00",a:"M. Shigematsu",     nat:"JPN",place:"Londres",         gain:"−0'11\"",  key:false},
+  {y:1967,s: 7776,t:"2:09:36",a:"Derek Clayton",     nat:"AUS",place:"Fukuoka",         gain:"−2'24\"",  key:true},
+  {y:1981,s: 7698,t:"2:08:18",a:"R. de Castella",    nat:"AUS",place:"Fukuoka",         gain:"−1'18\"",  key:true},
+  {y:1981,s: 7693,t:"2:08:13",a:"Alberto Salazar",   nat:"USA",place:"New York",        gain:"−0'05\"",  key:false},
+  {y:1984,s: 7685,t:"2:08:05",a:"Steve Jones",       nat:"GBR",place:"Chicago",         gain:"−0'08\"",  key:false},
+  {y:1985,s: 7632,t:"2:07:12",a:"Carlos Lopes",      nat:"POR",place:"Rotterdam",       gain:"−0'53\"",  key:true},
+  {y:1988,s: 7610,t:"2:06:50",a:"B. Dinsamo",        nat:"ETH",place:"Rotterdam",       gain:"−0'22\"",  key:false},
+  {y:1998,s: 7565,t:"2:06:05",a:"Ronaldo da Costa",  nat:"BRA",place:"Berlin",          gain:"−0'45\"",  key:false},
+  {y:1999,s: 7542,t:"2:05:42",a:"K. Khannouchi",     nat:"MAR",place:"Chicago",         gain:"−0'23\"",  key:false},
+  {y:2002,s: 7538,t:"2:05:38",a:"K. Khannouchi",     nat:"USA",place:"Londres",         gain:"−0'04\"",  key:false},
+  {y:2003,s: 7495,t:"2:04:55",a:"Paul Tergat",       nat:"KEN",place:"Berlin",          gain:"−0'43\"",  key:true},
+  {y:2007,s: 7466,t:"2:04:26",a:"H. Gebrselassie",   nat:"ETH",place:"Berlin",          gain:"−0'29\"",  key:false},
+  {y:2008,s: 7439,t:"2:03:59",a:"H. Gebrselassie",   nat:"ETH",place:"Berlin",          gain:"−0'27\"",  key:true},
+  {y:2011,s: 7418,t:"2:03:38",a:"Patrick Makau",     nat:"KEN",place:"Berlin",          gain:"−0'21\"",  key:false},
+  {y:2013,s: 7403,t:"2:03:23",a:"Wilson Kipsang",    nat:"KEN",place:"Berlin",          gain:"−0'15\"",  key:false},
+  {y:2014,s: 7377,t:"2:02:57",a:"Dennis Kimetto",    nat:"KEN",place:"Berlin",          gain:"−0'26\"",  key:true},
+  {y:2018,s: 7299,t:"2:01:39",a:"Eliud Kipchoge",    nat:"KEN",place:"Berlin",          gain:"−1'18\"",  key:true},
+  {y:2022,s: 7269,t:"2:01:09",a:"Eliud Kipchoge",    nat:"KEN",place:"Berlin",          gain:"−0'30\"",  key:false},
+  {y:2023,s: 7235,t:"2:00:35",a:"Kelvin Kiptum",     nat:"KEN",place:"Chicago",         gain:"−0'34\"",  key:true},
+  {y:2026,s: 7170,t:"1:59:30",a:"Sabastian Sawe",    nat:"KEN",place:"Londres",         gain:"−1'05\"",  key:true,sawe:true}
+];
+
+var Y_REFS=[
+  {s:10200,label:"2h50"},{s:9600,label:"2h40"},{s:9000,label:"2h30"},
+  {s:8400,label:"2h20"},{s:7800,label:"2h10"},{s:7200,label:"2h00",barrier:true}
+];
+
+// ── KEY MILESTONES ──
+var DECADES=[10200,9600,9000,8400,7800,7200];
+var crossed=[];
+var KEY_MS=[];
+ALL.forEach(function(r,i){
+  if(i===0){KEY_MS.push(r);return;}
+  DECADES.forEach(function(thr){
+    if(crossed.indexOf(thr)<0&&r.s<thr){crossed.push(thr);if(KEY_MS.indexOf(r)<0)KEY_MS.push(r);}
+  });
+  if(r.sawe&&KEY_MS.indexOf(r)<0)KEY_MS.push(r);
+});
+KEY_MS.sort(function(a,b){return a.y-b.y||a.s-b.s;});
+
+// ── CHART ──
+var cvs=document.getElementById('cvs');
+var ctx2=cvs.getContext('2d');
+var tip=document.getElementById('tooltip');
+var animProgress=0;
+var chartStarted=false;
+// Chart variables — always set by setupChart() before any render call
+var cW,cH,pL,pR,pT,pB,sMin,sMax,minY,maxY,pts;
+
+function xp(y){return pL+(y-minY)/(maxY-minY)*(cW-pL-pR);}
+function yp(s){return pT+(1-(s-sMin)/(sMax-sMin))*(cH-pT-pB);}
+
+function setupChart(){
+  var dpr=window.devicePixelRatio||1;
+  var W0=cvs.parentElement.getBoundingClientRect().width;
+  if(!W0||W0<10)W0=window.innerWidth||360;
+  cW=W0; cH=300;
+  cvs.width=W0*dpr; cvs.height=cH*dpr;
+  cvs.style.width=W0+'px'; cvs.style.height=cH+'px';
+  ctx2.setTransform(1,0,0,1,0,0);
+  ctx2.scale(dpr,dpr);
+  pL=44; pR=8; pT=14; pB=22;
+  minY=1906; maxY=2028;
+  var allS=ALL.map(function(r){return r.s;}).concat(Y_REFS.map(function(r){return r.s;}));
+  sMin=Math.min.apply(null,allS)-100;
+  sMax=Math.max.apply(null,allS)+350;
+  pts=ALL.map(function(r){return{x:xp(r.y),y:yp(r.s)};});
+}
+
+function renderChart(progress){
+  if(!pts)return;
+  ctx2.clearRect(0,0,cW,cH);
+
+  // Y refs
+  Y_REFS.forEach(function(ref){
+    var gy=yp(ref.s);
+    ctx2.save();
+    if(ref.barrier){ctx2.setLineDash([5,4]);ctx2.strokeStyle='rgba(232,0,28,0.3)';ctx2.lineWidth=1.5;}
+    else{ctx2.setLineDash([]);ctx2.strokeStyle='rgba(0,0,0,0.07)';ctx2.lineWidth=1;}
+    ctx2.beginPath();ctx2.moveTo(pL,gy);ctx2.lineTo(cW-pR,gy);ctx2.stroke();
+    ctx2.restore();
+    ctx2.fillStyle=ref.barrier?'rgba(232,0,28,0.75)':'rgba(0,0,0,0.3)';
+    ctx2.font=(ref.barrier?'bold ':'')+'9px Barlow Condensed,sans-serif';
+    ctx2.textAlign='right';
+    ctx2.fillText(ref.label,pL-5,gy+3);
+  });
+  ctx2.textAlign='left';
+
+  // X labels
+  [1908,1930,1950,1967,1988,2008,2026].forEach(function(yr){
+    ctx2.fillStyle='rgba(0,0,0,0.22)';
+    ctx2.font='9px Barlow Condensed,sans-serif';
+    ctx2.textAlign='center';
+    ctx2.fillText(yr,xp(yr),cH-4);
+  });
+  ctx2.textAlign='left';
+
+  var totalSeg=pts.length-1;
+  var fracIdx=progress*totalSeg;
+  var fullIdx=Math.floor(fracIdx);
+  var frac=fracIdx-fullIdx;
+
+  // Fill
+  ctx2.save();
+  ctx2.beginPath();
+  ctx2.moveTo(pts[0].x,cH-pB);
+  ctx2.lineTo(pts[0].x,pts[0].y);
+  for(var i=1;i<=Math.min(fullIdx,totalSeg);i++){
+    var mx=(pts[i-1].x+pts[i].x)/2;
+    ctx2.bezierCurveTo(mx,pts[i-1].y,mx,pts[i].y,pts[i].x,pts[i].y);
+  }
+  if(fullIdx<totalSeg&&frac>0){
+    var a=pts[fullIdx],b=pts[fullIdx+1],mx2=(a.x+b.x)/2;
+    var ex=a.x+(b.x-a.x)*frac,ey=a.y+(b.y-a.y)*frac;
+    ctx2.bezierCurveTo(mx2,a.y,mx2,b.y,ex,ey);
+    ctx2.lineTo(ex,cH-pB);
+  } else {
+    ctx2.lineTo(pts[Math.min(fullIdx,totalSeg)].x,cH-pB);
+  }
+  ctx2.closePath();
+  var grd=ctx2.createLinearGradient(0,pT,0,cH);
+  grd.addColorStop(0,'rgba(232,0,28,0.15)');
+  grd.addColorStop(1,'rgba(232,0,28,0.01)');
+  ctx2.fillStyle=grd;ctx2.fill();ctx2.restore();
+
+  // Line
+  ctx2.save();
+  ctx2.beginPath();
+  ctx2.moveTo(pts[0].x,pts[0].y);
+  for(var j=1;j<=Math.min(fullIdx,totalSeg);j++){
+    var mxj=(pts[j-1].x+pts[j].x)/2;
+    ctx2.bezierCurveTo(mxj,pts[j-1].y,mxj,pts[j].y,pts[j].x,pts[j].y);
+  }
+  if(fullIdx<totalSeg&&frac>0){
+    var a2=pts[fullIdx],b2=pts[fullIdx+1],mx3=(a2.x+b2.x)/2;
+    var ex2=a2.x+(b2.x-a2.x)*frac,ey2=a2.y+(b2.y-a2.y)*frac;
+    ctx2.bezierCurveTo(mx3,a2.y,mx3,b2.y,ex2,ey2);
+  }
+  ctx2.strokeStyle='#E8001C';ctx2.lineWidth=2.5;ctx2.lineJoin='round';ctx2.stroke();
+  ctx2.restore();
+
+  // Moving dot
+  if(progress>0&&progress<1){
+    var a3=pts[fullIdx],b3=pts[Math.min(fullIdx+1,totalSeg)];
+    var tx=a3.x+(b3.x-a3.x)*frac,ty=a3.y+(b3.y-a3.y)*frac;
+    ctx2.beginPath();ctx2.arc(tx,ty,5,0,Math.PI*2);
+    ctx2.fillStyle='#E8001C';ctx2.fill();
+    ctx2.strokeStyle='#fff';ctx2.lineWidth=1.5;ctx2.stroke();
+  }
+
+  // Dots
+  var revealed=Math.min(Math.floor(progress*totalSeg)+1, ALL.length);
+  for(var k=0;k<revealed;k++){
+    var r=ALL[k],p=pts[k];
+    if(r.sawe){
+      ctx2.save();ctx2.shadowColor='rgba(200,146,10,0.7)';ctx2.shadowBlur=14;
+      ctx2.beginPath();ctx2.arc(p.x,p.y,6,0,Math.PI*2);ctx2.fillStyle='#C8920A';ctx2.fill();ctx2.restore();
+      ctx2.beginPath();ctx2.arc(p.x,p.y,10,0,Math.PI*2);ctx2.strokeStyle='rgba(200,146,10,0.3)';ctx2.lineWidth=2;ctx2.stroke();
+      if(progress>=1){
+        ctx2.fillStyle='#C8920A';ctx2.font='bold 9px Barlow Condensed,sans-serif';
+        ctx2.textAlign='center';ctx2.fillText('1:59:30',p.x,p.y-14);ctx2.textAlign='left';
+      }
+    } else if(r.key){
+      ctx2.beginPath();ctx2.arc(p.x,p.y,4,0,Math.PI*2);ctx2.fillStyle='#E8001C';ctx2.fill();
+      ctx2.strokeStyle='rgba(255,255,255,0.8)';ctx2.lineWidth=1.5;ctx2.stroke();
+    } else {
+      ctx2.beginPath();ctx2.arc(p.x,p.y,2.5,0,Math.PI*2);ctx2.fillStyle='#ccc';ctx2.fill();
+    }
+  }
+}
+
+function easeInOut(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function startAnim(){
+  if(chartStarted)return;
+  chartStarted=true;
+  var dur=2800,start=performance.now();
+  function frame(now){
+    var raw=(now-start)/dur;
+    animProgress=raw>=1?1:easeInOut(raw);
+    renderChart(animProgress);
+    if(animProgress<1){requestAnimationFrame(frame);}
+    else{sendHeight();}
+  }
+  requestAnimationFrame(frame);
+}
+
+// Tooltip
+function getCanvasXY(e){
+  var r=cvs.getBoundingClientRect();
+  if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};
+  return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+function getHit(px,py){
+  if(!pts)return null;
+  var best=null,bestD=Infinity;
+  ALL.forEach(function(r,i){
+    if(!r.key&&!r.sawe)return;
+    var p=pts[i],d=Math.sqrt((px-p.x)*(px-p.x)+(py-p.y)*(py-p.y));
+    if(d<bestD){bestD=d;best={r:r,p:p};}
+  });
+  return bestD<22?best:null;
+}
+function showTip(r,p){
+  tip.className=r.sawe?'gold':'';
+  tip.innerHTML='<strong>'+r.t+'</strong>'+r.a+'<br><span class="tt-sub">'+r.place+' · '+r.y+'</span>'+(r.gain?'<div class="tt-gain">'+r.gain+' vs précédent</div>':'');
+  var wrap=cvs.parentElement.getBoundingClientRect();
+  var tx=p.x-70,ty=p.y-80;
+  if(tx<4)tx=4;if(tx+150>wrap.width)tx=wrap.width-154;if(ty<4)ty=p.y+16;
+  tip.style.left=tx+'px';tip.style.top=ty+'px';tip.style.opacity='1';
+}
+function hideTip(){tip.style.opacity='0';}
+cvs.addEventListener('click',function(e){if(animProgress<1)return;var c=getCanvasXY(e),h=getHit(c.x,c.y);h?showTip(h.r,h.p):hideTip();});
+cvs.addEventListener('touchstart',function(e){if(animProgress<1)return;var c=getCanvasXY(e),h=getHit(c.x,c.y);if(h){e.preventDefault();showTip(h.r,h.p);}else hideTip();},{passive:false});
+document.addEventListener('click',function(e){if(!cvs.contains(e.target))hideTip();});
+
+window.addEventListener('resize',function(){
+  setupChart();
+  renderChart(animProgress);
+  sendHeight();
+});
+
+// ── MILESTONES ──
+function buildMS(){
+  var c=document.getElementById('msl');
+  KEY_MS.forEach(function(r,i){
+    if(i>0){var g=document.createElement('div');g.className='msg';c.appendChild(g);}
+    var el=document.createElement('div');
+    el.className='ms key'+(r.sawe?' sawe':'');
+    el.innerHTML='<div class="ms-yr">'+r.y+'</div><div class="ms-dot"></div><div class="ms-body"><div class="ms-t">'+r.t+'</div><div class="ms-ath">'+r.a+' · '+r.nat+'</div>'+(r.gain?'<div class="ms-gn">'+r.gain+'</div>':'')+'<div class="ms-pl">'+r.place+'</div></div>';
+    c.appendChild(el);
+  });
+  var o=new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){
+      document.querySelectorAll('.ms').forEach(function(el,i){setTimeout(function(){el.classList.add('vis');},i*55);});
+      o.disconnect();
+    }
+  },{threshold:0.1});
+  o.observe(document.getElementById('msl'));
+}
+
+// ── BARRIERS ──
+var BARS=[
+  {label:"2h50",pct:20,year:1909,who:"R. Fowler",    gold:false},
+  {label:"2h40",pct:31,year:1909,who:"T. Johansson", gold:false},
+  {label:"2h30",pct:42,year:1927,who:"H. Payne",     gold:false},
+  {label:"2h20",pct:55,year:1952,who:"Jim Peters",   gold:false},
+  {label:"2h10",pct:67,year:1967,who:"D. Clayton",   gold:false},
+  {label:"2h00",pct:100,year:2026,who:"S. Sawe ⚡",  gold:true}
+];
+function buildBars(){
+  var c=document.getElementById('barsl');
+  BARS.forEach(function(b){
+    var row=document.createElement('div');row.className='bar-row';
+    row.innerHTML='<div class="bar-lbl">'+b.label+'</div><div class="bar-trk"><div class="bar-fill'+(b.gold?' gold':'')+'" data-p="'+b.pct+'"><span class="bar-txt">'+b.who+'</span></div></div><div class="bar-yr">'+b.year+'</div>';
+    c.appendChild(row);
+  });
+  var o=new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){
+      document.querySelectorAll('.bar-fill').forEach(function(el,i){setTimeout(function(){el.style.width=el.getAttribute('data-p')+'%';},i*140);});
+      o.disconnect();
+    }
+  },{threshold:0.2});
+  o.observe(document.getElementById('barsl'));
+}
+
+// ── INIT ──
+// Use DOMContentLoaded to guarantee canvas exists, then setup immediately
+document.addEventListener('DOMContentLoaded',function(){
+  setupChart();
+  renderChart(0);
+  buildMS();
+  buildBars();
+  sendHeight();
+
+  // Start animation when chart scrolls into view
+  var chartObs=new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){startAnim();chartObs.disconnect();}
+  },{threshold:0.3});
+  chartObs.observe(cvs);
+});
+</script>
+</body>
+</html>
